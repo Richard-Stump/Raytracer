@@ -1,0 +1,98 @@
+//Settings for the renderer, resolution, depth, etc...
+RenderSettings {
+	Resolution		1080 720
+	MaxDepth		20
+	Samples			16
+	Fps				60
+	Loop
+}
+
+//First frame to be displayed in the renderer
+
+//First frame to be displayed in the renderer
+KeyFrame 1.0 {
+	Background 0.2 0.2	0.5
+	
+	Plane "Plane1" {
+		point		0 -1 0
+		normal		0 1  0
+		diffuse		0.2 0.7 0.2
+		specular	0.2 0.2 0.2
+		shininess	0.25
+	}
+	
+	Sphere "Sphere1" {
+		position	0 0 0
+		radius		1
+		diffuse		0.5 0.5 0.5
+		specular	0.5 0.5 0.5
+		shininess	0.5
+	}
+
+	Sphere "Sphere2" {
+		position	-2 5 2
+		radius		1.43
+		diffuse		0.7	0.2	0.2
+		specular	0.6 0.3 0.3
+		shininess	0.73
+	} 
+	
+	Sphere "Sphere3" {
+		position	3 2 -2
+		radius		0.59
+		diffuse		0.2	0.3	0.2
+		specular	0.07 0.1 0.03
+		shininess	0.2
+	}
+	
+	Sphere "Sphere 4" {
+		position	2	2.5	-2.5
+		diffuse		0.8	0.6	0.4
+		specular	0.9 0.7 0.3
+		shininess	0.5
+	}
+	
+	Light "Light1" {
+		position 	0	10	-5
+		diffuse		0.5	0.5	0.5
+		specular	0.5	0.5	0.5
+	}
+	
+	Light "Light2" {
+		position	2 	5	-2
+		diffuse		1	0.4	0.6
+		specular	0.3	1	0.5
+	}
+	
+	Light "Light3" {
+		position	-3 	2	3
+		diffuse		3	0.3	0.3
+		specular	1	0.4	0.4
+	}
+		
+	Camera "Camera1" {
+		position	0	0	-5
+		lookat		0	0	0
+		up			0	1	0
+		fov			90
+	}	
+}
+
+KeyFrame 1.0 {
+	Camera "Camera1" {
+		position	5	0	0
+	}
+}
+
+KeyFrame 1.0 {
+	Camera "Camera1" {
+		position	0	0	5
+	}
+}
+
+
+KeyFrame 1.0 {
+	Camera "Camera1" {
+		position	-5	0	0
+	}
+}
