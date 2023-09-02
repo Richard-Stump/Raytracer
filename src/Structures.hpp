@@ -9,20 +9,34 @@
 struct Material
 {
 public:
+	/// The diffuse color for this material
 	glm::dvec3	diffuse{0.0, 0.0, 0.0};
+
+	/// The specular color for this material
 	glm::dvec3	specular{0.0, 0.0, 0.0};
+
+	/// The shininess for this material
 	double		shininess{0.0};
 };
 
 /**
  * Represents an intersection with an object.
+ * 
+ * This is all of the information needed from a specific intersection
  */
 struct Intersection
 {
-	Material*	material;	// The material of the object we intersected with
-	glm::dvec3	pos;		// The position the intersection occured
-	glm::dvec3	norm;		// The normal of the object at the intersection
-	double		t;			// The T parameter along the ray for the position
+	/// The material found at the intersection point
+	Material*	material;
+
+	/// The point that the intersection occured.
+	glm::dvec3	pos;
+
+	/// The normal to the surface at the point of intersection 
+	glm::dvec3	norm;
+
+	/// The T parameter along the ray that the intersection occured
+	double		t;	
 };
 
 #endif//STRUCTURES_HPP

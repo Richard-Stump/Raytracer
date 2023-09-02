@@ -64,10 +64,14 @@ std::string Tokenizer::nextString()
 	while (true) {
 		stream >> string;
 
+		// Ignore comments
 		if (isComment(string)) {
 			stream.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		} 
 		else {
+			
+			// if we found a quotation, then we want to keep reading the 
+			// string in until we found an ending quotation mark.
 			if (string[0] == '\"' && string[string.size() - 1] != '\"') {
 				char c;
 
@@ -131,6 +135,13 @@ int Tokenizer::nextInt()
 //							PARSER
 //=============================================================
 
+/**
+ * HACK: This object type is simply here to discard all the properties
+ * for an unkown object type. 
+ * 
+ * This should have been done directly in the parser's code, rather
+ * than creating a whole new type to handle the case. 
+ */
 class NullObject : public Object
 {
 public:
@@ -151,6 +162,7 @@ void Parser::parseRenderSettings(Animation& animation) {
 	
 	tokenizer.nextToken();
 
+	// Read in all the properties for the render settings block
 	std::string token;
 	while ((token = tokenizer.nextTokenLower()) != "}") {
 		if (token == "resolution") {
@@ -181,6 +193,9 @@ void Parser::parseObject(Object& object, std::string& name)
 
 	tokenizer.nextToken();
 
+	// Until we end the object block, read in the name of the property
+	// and pass the property name to the object. Let the object parse
+	// the value of the property
 	std::string token;
 	while ((token = tokenizer.nextTokenLower()) != "}") {
 		tokenizer.forgetActiveTokens();
@@ -197,6 +212,9 @@ void Parser::parseCamera(Camera& camera, std::string& name)
 
 	tokenizer.nextToken();
 
+	// Until we end the object block, read in the name of the property
+	// and pass the property name to the camera. Let the camera parse
+	// the value of the property
 	std::string token;
 	while ((token = tokenizer.nextTokenLower()) != "}") {
 		tokenizer.forgetActiveTokens();
@@ -213,6 +231,9 @@ void Parser::parseLight(Light& light, std::string& name)
 
 	tokenizer.nextToken();
 
+	// Until we end the object block, read in the name of the property
+	// and pass the property name to the light. Let the light parse
+	// the value of the property
 	std::string token;
 	while ((token = tokenizer.nextTokenLower()) != "}") {
 		tokenizer.forgetActiveTokens();
@@ -223,9 +244,16 @@ void Parser::parseLight(Light& light, std::string& name)
 	std::cout << "Done parsing light" << std::endl;
 }
 
-
-// There is certainly a better way to do this.
-// I am pretty ashamed of myself because I am too lazy to do it properly
+/**
+ * Parses a specific renderable object type by creating an instance of
+ * that object type, and parsing it as a generic object
+ * 
+ * @param TYPE The type to use for the object
+ * 
+ * NOTE: This really should have been a template function...
+ *       This was just a lazy way to implement this and reduce the number
+ *       of LOC
+ */
 #define PARSE_HACK(TYPE)											\
 	int objectIndex = getNameIndex(frame.objectNames, name);		\
 	std::shared_ptr<Object> object = std::make_shared<TYPE>();		\
@@ -244,25 +272,35 @@ void Parser::parseFrame(Frame& frame)
 {
 	std::cout << "Parsing frame" << std::endl;
 
+	// We initialize the time offset to 0 seconds for all frames
 	frame.timeOffset = 0.0f;
 	
+	// If we find a keyframe keyword, update the time offset with
+	// the number after it
 	if (tokenizer.nextTokenLower() == "keyframe") {
 		frame.timeOffset = std::stod(tokenizer.nextToken());
 	}
 
+	// Scan in and throw away the { token
 	tokenizer.nextToken();
 	tokenizer.forgetActiveTokens();
 
+	// Next, we scan until the end of the keyframe block
 	std::string token;
 	while ((token = tokenizer.nextTokenLower()) != "}") {
 		tokenizer.forgetActiveTokens();
 
+		// I have no clue what this check is here for, if we're going
+		// to check it in the next if statement ;_;
 		std::string name;
 		if (token != "background") {
 			name = tokenizer.nextToken();
 		}
 
+		// Parse in our scene information based on the keyword that is in
+		// the stream. 
 		if (token == "background") {
+			// Background color for this frame
 			frame.background = {
 				tokenizer.nextDouble(),
 				tokenizer.nextDouble(),
@@ -270,15 +308,21 @@ void Parser::parseFrame(Frame& frame)
 			};
 		}
 		else if (token == "sphere") {
+			// Sphere object
 			PARSE_HACK(Sphere);
 		}
 		else if (token == "plane") {
-				PARSE_HACK(Plane);
+			// Plane object
+			PARSE_HACK(Plane);
 		}
 		else if (token == "triangle") {
+			// Triangle object
 			PARSE_HACK(Triangle);
 		}
 		else if (token == "light") {
+			// Light object.
+			// This does not use the PARSE_HACK() macro since the lights
+			// are stored in a seperate list
 			int lightIndex = getNameIndex(frame.lightNames, name);		
 			std::shared_ptr<Light> light = std::make_shared<Light>();		
 			if (lightIndex == -1) {										
@@ -293,9 +337,11 @@ void Parser::parseFrame(Frame& frame)
 			}
 		}
 		else if (token == "camera") {
+			// Camera for the scene
 			parseCamera(frame.camera, frame.cameraName);
 		}
 		else {
+			// Unknown object type
 			std::cout << "Unknown object type of \"" << token << "\"" << std::endl;
 			NullObject nullObject;
 			parseObject(nullObject, name);
@@ -310,21 +356,30 @@ void Parser::doParse(Animation& animation)
 {
 	std::cout << "Beginning Parse" << std::endl;
 
-	// This try loop is to wait for an EOF exception while parsing. 
-	// There's probably a more semantically-correct way to do this, but this works
+	// This try block waits for an EOF exception while parsing. When the exception
+	// is caught, the parser checks if there were still tokens in the tokenizer.
+	// If there were, the EOF was unexpected, and we have a parse error.
+	//
+	// NOTE: After taking a compilers course, there was certainly a better way to handle
+	//       this. 
 	try {
 		while (tokenizer.hasNextToken()) {
 			std::string& token = tokenizer.nextTokenLower();
 
+			// Check the first token we find, and parse the specific block that
+			// was specified. 
 			if (token == "rendersettings") {
 				parseRenderSettings(animation);
 			}
 			else if (token == "keyframe") {
+				// If we do no have any keyframes, create a blank keyframe. 
+				// Otherwise, make a copy of the last frame we parsed
 				if (animation.keyFrames.size() == 0)
 					animation.keyFrames.push_back(Frame());
 				else
 					animation.keyFrames.push_back(animation.keyFrames.back());
 
+				// Parse the new frame
 				tokenizer.resetIndex();
 				parseFrame(animation.keyFrames.back());
 			}

@@ -2,6 +2,7 @@
 A simple raytracer project I created in Spring 2022 for CS 434. 
 
 ![An animation created with the raytracer](./images/raytracer.gif)
+![Visual of the raytracer rendering](./images/display.gif)
 
 This program reads in a scene from text file, and then renders the
 frames interpolated from the keyframes in that text file. It uses OpenMP to speed up

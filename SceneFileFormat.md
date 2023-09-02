@@ -17,7 +17,7 @@ RenderSettings {
 
 The re
 
-## Keyframe Block
+## Keyframe Block:
 
 ### Object Definitions:
 This raytracer can render spheres and planes with lights in the scene.
